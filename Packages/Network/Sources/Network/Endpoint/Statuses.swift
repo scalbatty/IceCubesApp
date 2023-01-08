@@ -1,15 +1,20 @@
 import Foundation
 import Models
 
+public enum Attachment: Codable {
+    case mediaIds([String])
+    case poll(options: [String])
+}
+
 public enum Statuses: Endpoint {
   case postStatus(status: String,
                   inReplyTo: String?,
-                  mediaIds: [String]?,
+                  attachment: Attachment?,
                   spoilerText: String?,
                   visibility: Visibility)
   case editStatus(id: String,
                   status: String,
-                  mediaIds: [String]?,
+                  attachment: Attachment?,
                   spoilerText: String?,
                   visibility: Visibility)
   case status(id: String)
@@ -54,28 +59,42 @@ public enum Statuses: Endpoint {
   
   public func queryItems() -> [URLQueryItem]? {
     switch self {
-    case let .postStatus(status, inReplyTo, mediaIds, spoilerText, visibility):
+    case let .postStatus(status, inReplyTo, attachment, spoilerText, visibility):
       var params: [URLQueryItem] = [.init(name: "status", value: status),
                                     .init(name: "visibility", value: visibility.rawValue)]
       if let inReplyTo {
         params.append(.init(name: "in_reply_to_id", value: inReplyTo))
       }
-      if let mediaIds {
+      switch attachment {
+      case let .mediaIds(mediaIds)?:
         for mediaId in mediaIds {
           params.append(.init(name: "media_ids[]", value: mediaId))
         }
+      case let .poll(options)?:
+        for option in options {
+          params.append(.init(name: "poll[options][]", value: option))
+        }
+      case nil:
+        break
       }
       if let spoilerText {
         params.append(.init(name: "spoiler_text", value: spoilerText))
       }
       return params
-    case let .editStatus(_, status, mediaIds, spoilerText, visibility):
+    case let .editStatus(_, status, attachment, spoilerText, visibility):
       var params: [URLQueryItem] = [.init(name: "status", value: status),
                                     .init(name: "visibility", value: visibility.rawValue)]
-      if let mediaIds {
+      switch attachment {
+      case let .mediaIds(mediaIds)?:
         for mediaId in mediaIds {
           params.append(.init(name: "media_ids[]", value: mediaId))
         }
+      case let .poll(options)?:
+        for option in options {
+          params.append(.init(name: "poll[options][]", value: option))
+        }
+      case nil:
+        break
       }
       if let spoilerText {
         params.append(.init(name: "spoiler_text", value: spoilerText))

@@ -42,6 +42,7 @@ public class StatusEditorViewModel: ObservableObject {
     }
   }
   @Published var mediasImages: [ImageContainer] = []
+  @Published var pollOptions: [String] = []
   @Published var replyToStatus: Status?
   @Published var embededStatus: Status?
   
@@ -330,5 +331,11 @@ public class StatusEditorViewModel: ObservableObject {
   private func uploadMedia(data: Data) async throws -> MediaAttachement? {
     guard let client else { return nil }
     return try await client.mediaUpload(mimeType: "image/jpeg", data: data)
+  }
+
+  // MARK: - Poll related functions
+
+  func togglePoll() {
+    
   }
 }
