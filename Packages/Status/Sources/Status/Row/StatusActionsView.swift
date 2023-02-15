@@ -4,6 +4,37 @@ import Models
 import Network
 import SwiftUI
 
+struct AnimatedCounter: Animatable, View {
+
+    var value: Double
+    let maxOffset: CGFloat = 12
+
+    var animatableData: Double {
+        get { value }
+        set { value = newValue }
+    }
+
+    var progress: Double {
+        value - floor(value)
+    }
+
+    var body: some View {
+        ZStack {
+            if value.rounded() == value { // Integer, just show the text label
+                Text("\(Int(value))")
+            } else {
+                Text("\(Int(floor(value)))")
+                    .offset(y: progress * -maxOffset)
+                    .opacity(1.0 - progress)
+                Text("\(Int(ceil(value)))")
+                    .offset(y: maxOffset + progress * -maxOffset)
+                    .opacity(progress)
+            }
+        }
+    }
+}
+
+
 struct StatusActionsView: View {
   @EnvironmentObject private var theme: Theme
   @ObservedObject var viewModel: StatusRowViewModel
@@ -72,21 +103,7 @@ struct StatusActionsView: View {
               .buttonStyle(.borderless)
             }
           } else {
-            Button {
-              handleAction(action: action)
-            } label: {
-              HStack(spacing: 2) {
-                Image(systemName: action.iconName(viewModel: viewModel))
-                  .foregroundColor(action.tintColor(viewModel: viewModel, theme: theme))
-                if let count = action.count(viewModel: viewModel, theme: theme), !viewModel.isRemote {
-                  Text("\(count)")
-                    .font(.scaledFootnote)
-                }
-              }
-            }
-            .buttonStyle(.borderless)
-            .disabled(action == .boost &&
-              (viewModel.status.visibility == .direct || viewModel.status.visibility == .priv))
+            actionButton(action: action)
             Spacer()
           }
         }
@@ -95,6 +112,28 @@ struct StatusActionsView: View {
         StatusRowDetailView(viewModel: viewModel)
       }
     }
+  }
+
+  private func actionButton(action: Actions) -> some View {
+
+    HStack(spacing: 2) {
+      Button {
+        handleAction(action: action)
+      } label: {
+        Image(systemName: action.iconName(viewModel: viewModel))
+          .foregroundColor(action.tintColor(viewModel: viewModel, theme: theme))
+      }
+      if let count = action.count(viewModel: viewModel, theme: theme), !viewModel.isRemote {
+        AnimatedCounter(value: Double(count))
+              .font(.scaledFootnote)
+          .onChange(of: count) { newValue in
+            print("Count changed to \(newValue)")
+          }
+      }
+    }
+    .buttonStyle(.borderless)
+    .disabled(action == .boost &&
+      (viewModel.status.visibility == .direct || viewModel.status.visibility == .priv))
   }
 
   private func handleAction(action: Actions) {

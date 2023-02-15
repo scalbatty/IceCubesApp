@@ -173,7 +173,9 @@ public class StatusRowViewModel: ObservableObject {
   func favorite() async {
     guard client.isAuth else { return }
     isFavorited = true
-    favoritesCount += 1
+      withAnimation {
+          favoritesCount += 1
+      }
     do {
       let status: Status = try await client.post(endpoint: Statuses.favorite(id: localStatusId ?? status.reblog?.id ?? status.id))
       updateFromStatus(status: status)
@@ -186,7 +188,9 @@ public class StatusRowViewModel: ObservableObject {
   func unFavorite() async {
     guard client.isAuth else { return }
     isFavorited = false
-    favoritesCount -= 1
+      withAnimation {
+          favoritesCount -= 1
+      }
     do {
       let status: Status = try await client.post(endpoint: Statuses.unfavorite(id: localStatusId ?? status.reblog?.id ?? status.id))
       updateFromStatus(status: status)
